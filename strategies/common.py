@@ -109,6 +109,8 @@ class PlayerPublicProfile:
 
 
 class PlayerPrivateProfile:
+    """
+    """
     def __init__(self,player_id,strategy): 
         self.id=player_id
         self.strategy=strategy
@@ -185,7 +187,7 @@ class CommonKnowledge:
                 if not trainning:
                     print('bad call, player %s loses one dice'%start_player_id)
                     print('------------------------------------------------------------------')
-        if self.dice[start_player_id]>0:      # If the supposed first player still has dice 
+        if self.dice[start_player_id] > 0:      # If the supposed first player still has dice 
             self.whose_turn=start_player_id
         else:
             while self.dice[start_player_id]<1:      # If the suppose first player has no dice, find next player still in game 
@@ -193,7 +195,7 @@ class CommonKnowledge:
             self.whose_turn=start_player_id
         self.last_player=None 
         self.last_bid=None 
-        self.dice[self.dice<0]=0
+        self.dice[self.dice < 0] = 0
         for i in range(self.num_players):
             if self.dice[i]>0:
                 self.public_profile[i].update(self.dice[i],self.turn,outcome)     # update players' public profile 
