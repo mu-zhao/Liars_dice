@@ -9,7 +9,6 @@ def roll_dice(num):
     
     Arguments:
         num {int} -- number of dice 
-    
     Returns:
         numpy array-- [1,2,0,0,0,0] means the result is 1 one, 2 twos
     """
