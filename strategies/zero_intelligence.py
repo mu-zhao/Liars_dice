@@ -1,4 +1,5 @@
 import numpy as np 
+import time
 import strategies.common as cm
 from scipy.stats import norm
 def transform(x):
@@ -11,7 +12,7 @@ def transform(x):
 class ZeroIntelligence:
     def __init__(self,conservativeness,aggressiveness,stochastic=0):
         self.conservativeness=transform(conservativeness)
-        self.up_lim_factor=0.84-0.64*self.conservativeness
+        self.up_lim_factor=0.84-0.54*self.conservativeness
         self.aggressiveness=transform(aggressiveness)
         self.stochastic=stochastic
         self.intelligence=0

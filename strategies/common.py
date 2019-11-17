@@ -38,6 +38,7 @@ def compare_bids(bids):
     if bids[1] is None:
         return False
     w=[0,0]
+
     for i,b in enumerate(bids):
         if b[1]==0:
             w[i]=b[0]*2
