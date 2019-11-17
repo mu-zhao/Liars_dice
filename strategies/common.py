@@ -89,6 +89,7 @@ class PlayerPublicProfile:
         self.id=player_id
         self.dice=num_dice
         self.bids=[]
+        self.distribution_common_belief=
         self.history=None 
     
 
