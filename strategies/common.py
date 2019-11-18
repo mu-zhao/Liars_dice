@@ -1,21 +1,21 @@
 import numpy as np 
-
+from probability_calculation import DistributionBelief as DB
 
 dic=['liar','spot-on']  # only for easy read
 
 
-def roll_dice(num):
-    """ This is a function simulate dice rolling 
+# def roll_dice(num):
+#     """ This is a function simulate dice rolling 
     
-    Arguments:
-        num {int} -- number of dice 
-    Returns:
-        numpy array-- [1,2,0,0,0,0] means the result is 1 one, 2 twos
-    """
-    res=np.zeros(6,dtype=int)
-    for i in np.random.randint(6,size=num):
-        res[i]+=1
-    return res 
+#     Arguments:
+#         num {int} -- number of dice 
+#     Returns:
+#         numpy array-- [1,2,0,0,0,0] means the result is 1 one, 2 twos
+#     """
+#     res=np.zeros(6,dtype=int)
+#     for i in np.random.randint(6,size=num):
+#         res[i]+=1
+#     return res 
 
 def compare(bid,outcome,spot_on=False,trainning=False):
     
@@ -79,7 +79,7 @@ class HistoricalProfile:
 
 class PlayerPublicProfile:
 
-    def __init__(self,player_id,num_dice):
+    def __init__(self,player_id,num_dice,total_dice,call_level,bluff):
         """This is a class of a player's bids
         
         Arguments:
@@ -89,7 +89,7 @@ class PlayerPublicProfile:
         self.id=player_id
         self.dice=num_dice
         self.bids=[]
-        self.distribution_common_belief=
+        self.dist_belief=DB(self.dice,total_dice,call_level,bluff)
         self.history=None 
     
 
@@ -116,8 +116,8 @@ class PlayerPrivateProfile:
         self.id=player_id
         self.strategy=strategy
 
-    def roll(self,num_dice):
-        self.roll_result=roll_dice(num_dice)
+    def roll(self,ppp):
+        self.roll_result=np.random.choice(ppp.dist_belief.outcome,p=ppp.dist_belief.distribution)
 
     def make_decision(self,common_knowledge,trainning):
         return self.strategy.bid(self.roll_result,common_knowledge)
@@ -130,7 +130,7 @@ class PlayerPrivateProfile:
 
 class CommonKnowledge:
 
-    def __init__(self,num_dice,num_player,start_player_id=0):
+    def __init__(self,num_dice,num_player,call_level,bluff,start_player_id=0):
         """[summary]
         
         Arguments:
@@ -143,7 +143,7 @@ class CommonKnowledge:
         self.first_player=start_player_id 
         self.public_profile=[]
         for i in range(num_player):
-            self.public_profile.append(PlayerPublicProfile(i,num_dice))
+            self.public_profile.append(PlayerPublicProfile(i,num_dice,sum(self.dice),call_level,bluff))
         self.whose_turn=start_player_id
         self.turn=0
         self.last_player=None 
@@ -153,6 +153,7 @@ class CommonKnowledge:
         if not trainning:
             print('Turn %s, Players Dice %s' %(self.turn,self.dice),'Player %s bid %s'%(self.whose_turn,bid))
         self.public_profile[self.whose_turn].raise_bid(bid)
+        for 
         self.last_player=self.whose_turn
         self.last_bid=bid 
         self.turn+=1
@@ -224,7 +225,7 @@ class PrivateKnowledge:
                 player.roll(dice)
 
 
-    def eeveryone_reveal_results(self,common_knowledge):
+    def everyone_reveal_results(self,common_knowledge):
         s=np.zeros(6,dtype=int)
         for player_id in range(common_knowledge.num_players):
             if common_knowledge.dice[player_id]>0:
@@ -237,20 +238,22 @@ class PrivateKnowledge:
         return s 
 
 class PlatForm:
-    def __init__(self,num_dice,private_strategies,trainning=False):
-        self.common_knowledge=CommonKnowledge(num_dice,len(private_strategies))
+    def __init__(self,num_dice,private_strategies,call_level=1/3,bluff=0.1,trainning=False):
+        self.num_player=len(private_strategies)
+        self.adice=np.zeros(self.num_player)+num_dice
+        self.common_knowledge=CommonKnowledge(num_dice,self.num_player,num_dice*self.num_player,call_level,bluff)
         self.private_knowledge=PrivateKnowledge(private_strategies,trainning)
         self.trainning=trainning
         self.new_bid=None  
         self.game_over=False 
     
     def reveal_game(self):
-        self.outcome=self.private_knowledge.eeveryone_reveal_results(self.common_knowledge)
+        self.outcome=self.private_knowledge.everyone_reveal_results(self.common_knowledge)
     
     def initialize_game(self):
         self.private_knowledge.everyone_roll_dice(self.common_knowledge)
 
-    def get_valid_bet(self,attempt_allowed=3):
+    def get_valid_bet(self,attempt_allowed=5):
         attempt=0
         while True:    # this loop is just for getting a valid bet
             bid=self.private_knowledge.private_profile[self.common_knowledge.whose_turn].make_decision(self.common_knowledge,self.trainning) 

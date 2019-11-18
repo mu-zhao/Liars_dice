@@ -22,10 +22,10 @@ def aggregate_distribution(D):
     """This function takes a list of distribution, returns the aggregate distribution. 
     
     Arguments:
-        D {List of array} -- list of individual prob distribution
+        D {List of array} -- list of individual prob distribution, not cumulative
     
     Returns:
-        numpy array -- aggregate distribution
+        numpy array -- aggregate distribution 
     """
     d=D[0]
     for i in D[1:]:
@@ -35,7 +35,8 @@ def aggregate_distribution(D):
             d=add_distribution(d,i)
     return d 
 
-def call_belief(agg_player_dist,agg_others_dist,call_level):
+
+def call_belief(agg_player_dist,agg_others_dist,call_level):  #they are cumulative dist
     critical_value=np.sum(agg_others_dist>=call_level,axis=0)
     call_dist=np.zeros((len(agg_player_dist)+len(agg_others_dist)-1,6))
     for i in range(6):
@@ -64,9 +65,6 @@ def get_legit_bids(bid):
         L[bid[1]+1:]=bid[0]
     return L
 
-    
-
-
 def best_response(last_bid,player_rollout,others_agg_dist,next_player_call_belief): # this function will be called lots of times, so it has to be fast
     if last_bid[0]>=player_rollout[last_bid[1]]+len(others_agg_dist):  # rollout is aggregated 
         return 0
@@ -89,10 +87,6 @@ def best_response(last_bid,player_rollout,others_agg_dist,next_player_call_belie
     return response 
             
         
-        
-   
-    
-
 class AggregateDistribution: #notice they are all common knowledge
     def __init__(self,player_dice,others_dice,call_level):
         self.dice=player_dice
@@ -105,6 +99,7 @@ class AggregateDistribution: #notice they are all common knowledge
         self.agg_cumulative_dist=generate_init_dist(player_dice,binom.sf)
         self.others_agg_dist=generate_init_dist(others_dice,binom.sf)
         self.call_dist=call_belief(self.agg_cumulative_dist,self.others_agg_dist,self.call_level)
+
     def update(self,outcome,dist):
         self.agg_dist=np.zeros_like(self.agg_dist)
         self.agg_cumulative_dist=np.zeros_like(self.agg_cumulative_dist)
@@ -112,14 +107,13 @@ class AggregateDistribution: #notice they are all common knowledge
             self.agg_dist[rollout[0],0]+=dist[i]
             for i in range(1,6):
                 self.agg_dist[rollout[i]+rollout[0],i]+=dist[i]
-        self.agg_cumulative_dist[-1]=self.agg_dist[-1]  #update cumulative dist
-        for i in range(-2,-len(self.agg_cumulative_dist)-1,-1):
-            self.agg_cumulative_dist[i]=self.agg_cumulative_dist[i+1]+self.agg_dist[i]
+        self.agg_cumulative_dist=self.agg_dist[::-1].cumsum(axis=0)[::-1]  #update cumulative dist
         self.expectation=np.sum(self.agg_dist*np.arange(self.dice+1).reshape(-1,1),axis=0)
         second_moment=np.sum(self.agg_cumulative_dist*(np.arrang(self.dice+1).reshape(-1,1)**2),axis=0)
         self.std=second_moment-self.expectation**2
+
     def update_belief(self,belief_agg_dist): #belief_agg_dist is a list of players' agg dist
-        self.others_agg_dist=aggregate_distribution(belief_agg_dist)
+        self.others_agg_dist=aggregate_distribution(belief_agg_dist)[::-1].cumsum(axis=0)[::-1]
         self.call_dist=call_belief(self.agg_cumulative_dist,self.others_agg_dist,self.call_level)
         
         
@@ -167,6 +161,10 @@ class DistributionBelief:
         posterior_dist=self.distribution*conditional_prob
         posterior_dist/=np.sum(posterior_dist) #normalize
         self.distribution=self.distribution*self.bluff+posterior_dist*(1-self.bluff)
+    
+    def update_belief_about_player(self):
+        self.agg_info.update(self.outcome,self.distribution)
+    def update_player_belief_about_others(self,players_agg_dist):
        
     
     def calibrate_bluff(self,ture_rollout,bid):
