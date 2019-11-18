@@ -88,15 +88,6 @@ def best_response(last_bid,player_rollout,others_agg_dist,next_player_call_belie
                 response=[num,i]
     return response 
             
-            
-
-                
-            
-        
-        
-    
-        
-
         
         
    
@@ -158,6 +149,7 @@ class DistributionBelief:
         self.outcome=np.array(outcome)
         self.distribution=np.array(distribution)
         self.agg_info=AggregateDistribution(player_dice,total_dice-player_dice,call_level)
+    
     def bayesian_inference(self,last_bid,previous_bid,next_player_call_belief):
         conditional_prob=np.zeros_like(self.outcome)
         result=np.ones((len(self.agg_info.others_agg_dist)+self.dice,6))
