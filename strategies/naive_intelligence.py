@@ -1,5 +1,6 @@
 import numpy as np 
 import time
+from scipy.stats import binom 
 from probability_calculation import best_response,get_legit_bids
 
 def good_call(bid,rollout):
@@ -63,30 +64,49 @@ def initial_bid_candidates(rollout,num_other_dice,aggresive):
         L+=[[rollout[i]+k,i] for k in range(int(lower),int(upper)+1)]
     return L 
 
-
+def get_bid_candidate(bid,rollout,stats):
+    res=[]
+    lower_lim=get_legit_bids(bid)
+    upper_lim=stats[0]+stats[1]*1.2+rollout
+    for i in range(6):
+        res+=[[k,i] for k in range(lower_lim[i],int(upper_lim[i]))]
+    return res 
 class NaiveIntelligence:
-    def __inti__(self,simulation_time_limit=5):
+    def __inti__(self,aggresive=0.8,simulation_time_limit=5):
         self.time_limit=simulation_time_limit
+        self.aggresiveness=aggresive
         self.expected_power=[]
-    def bid(self,player_id,rollout,p_dist,ck):
+    def bid(self,player_id,rollout,private_dist,ck):
         belief_dist=ck.get_all_call_belief(player_id)
         player_in_game_dice=ck.get_player_in_game_dice(player_id)
         if ck.last_bid is None:
-            bid_candidate=initial_bid_candidates(rollout,ck.get_total_dice())
-            t_lim=self.time_limit/len(bid_candidate)
+            bid_candidate=initial_bid_candidates(rollout,ck.get_total_dice(),self.aggresiveness)
             max_payoff=0
             response=None 
-            for bid in bid_candidate:
-                sim_res=simulation(bid,rollout,belief_dist,t_lim)
-                payoff_bid=payoff(sim_res,player_in_game_dice,squared_power)
-                if payoff_bid>max_payoff:
-                    max_payoff=payoff_bid
-                    response=bid
-            self.expected_power.append(max_payoff)
-            return response
         else:
-            p_liar=
-            payoff_call_liar=reward(player_in_game_dice,player_id,squared_power,True)*
+            p_liar=private_dist[ck.last_bid[0],ck.last_bid[1]]
+            if ck.last_bid[0]>=ck.get_total_dice():
+                p_spot_on=p_liar
+            else:
+                p_spot_on=p_liar-private_dist[ck.last_bid[0]+1,ck.last_bid[1]]
+            payoff_call_liar=reward(player_in_game_dice,player_id,squared_power,True)*(1-p_liar)+reward(player_in_game_dice,player_id,squared_power)*p_liar
+            payoff_spot_on=reward(player_in_game_dice,player_id,squared_power,True,True)*(1-p_spot_on)+reward(player_in_game_dice,player_id,squared_power,spot_on=True)*p_spot_on
+            if payoff_call_liar>payoff_spot_on:
+                max_payoff=payoff_call_liar
+                response=0
+            else:
+                max_payoff=payoff_spot_on
+                response=1
+            bid_candidate=get_bid_candidate(ck.last_bid,rollout,ck.get_others_stats(player_id))
+        t_lim=self.time_limit/len(bid_candidate)
+        for bid in bid_candidate:
+            sim_res=simulation(bid,rollout,belief_dist,t_lim)
+            payoff_bid=payoff(sim_res,player_in_game_dice,squared_power)
+            if payoff_bid>max_payoff:
+                max_payoff=payoff_bid
+                response=bid
+        self.expected_power.append(max_payoff)
+        return response
 
 
 

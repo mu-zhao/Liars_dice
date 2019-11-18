@@ -239,10 +239,11 @@ class CommonKnowledge:
         return L 
     def get_all_call_belief(self,player_id):
         L=[]
-        for i in range(player_id-self.num_players,player_id);
-        if self.dice[i]>0:
-            L.append(self.public_profile[i].dist_belief.agg_info.call_dist)
+        for i in range(player_id-self.num_players,player_id):
+            if self.dice[i]>0:
+                L.append(self.public_profile[i].dist_belief.agg_info.call_dist)
         return L 
+        
     def get_player_in_game_dice(self,player_id):
         return [i if i>0 for i in self.dice[player_id:]]+[i if i>0 for i in self.dice[:player_id]]
 
