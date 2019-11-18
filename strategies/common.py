@@ -245,7 +245,8 @@ class CommonKnowledge:
         return L 
         
     def get_player_in_game_dice(self,player_id):
-        return [i if i>0 for i in self.dice[player_id:]]+[i if i>0 for i in self.dice[:player_id]]
+        L=[i if i>0 for i in self.dice[player_id:]]+[i if i>0 for i in self.dice[:player_id]]
+        return L 
 
     def get_next_player_call_belief(self,player_id):
         i=(player_id+1)%self.num_players
