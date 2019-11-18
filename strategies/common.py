@@ -85,27 +85,35 @@ class PlayerPublicProfile:
         Arguments:
             num_dice {int} -- number of dice this player has
         """
-        
+        self.call_level=call_level
+        self.bluff=bluff 
         self.id=player_id
         self.dice=num_dice
         self.bids=[]
         self.dist_belief=DB(self.dice,total_dice,call_level,bluff)
         self.history=None 
+
+    def calibrate_bluff(self):
+        pass 
     
 
-    def raise_bid(self,bid):
+    def update_belief_about_player(self,last_bid,previous_bid,next_player_call_belief):
         """This is a method to update a player's bids
-        Arguments:
-            bid {tuple} -- the bid this player make. (4,5) means 'four fives'. (0,0)
+       
         """
-        self.bids.append(bid)
+        self.bids.append(last_bid)
+        self.dist_belief.bayesian_inference(last_bid,previous_bid,next_player_call_belief)
+        self.dist_belief.update_belief_about_player()
+
+    def update_player_belief_about_others(self,players_agg_dist):
+        self.dist_belief.update_player_belief_about_others(players_agg_dist)
 
 
 
-
-    def update(self,num_dice,num_turn,outcome):
-        self.dice=num_dice
+    def reset(self,player_dice,total_dice): #reset()
+        self.dice=player_dice
         self.bids=[]
+        self.dist_belief=DB(self.dice,total_dice,self.call_level,self.bluff)
         
 
 
@@ -152,8 +160,12 @@ class CommonKnowledge:
     def update(self,bid,trainning):
         if not trainning:
             print('Turn %s, Players Dice %s' %(self.turn,self.dice),'Player %s bid %s'%(self.whose_turn,bid))
-        self.public_profile[self.whose_turn].raise_bid(bid)
-        for 
+        for i in range(self.num_players):
+            if self.dice[i]>0:
+                if i==self.whose_turn:
+                    self.public_profile[i].update_belief_about_player(bid,self.last_bid,self.get_next_player_call_belief(i))
+                else:
+                    self.public_profile[i].update_player_belief_about_others(self.get_others_agg_dist(i))
         self.last_player=self.whose_turn
         self.last_bid=bid 
         self.turn+=1
@@ -200,14 +212,26 @@ class CommonKnowledge:
         self.dice[self.dice < 0] = 0
         for i in range(self.num_players):
             if self.dice[i]>0:
-                self.public_profile[i].update(self.dice[i],self.turn,outcome)     # update players' public profile 
+                self.public_profile[i].reset(self.dice[i],self.get_total_dice())    # update players' public profile 
 
     def get_total_dice(self):
         return sum(self.dice)  
 
     def player_in_game(self):
         return sum(self.dice>0)
-
+    def get_others_agg_dist(self,player_id):    # NOT cumulative dist
+        L=[]
+        for i in range(self.num_players):
+            if self.dice[i]>0 and i!=player_id:
+                L.append(self.public_profile[i].dist_belief.agg_info.agg_dist)
+        return L 
+    def get_next_player_call_belief(self,player_id):
+        i=(player_id+1)%self.num_players
+        while True:
+            if self.dice[i]>0:
+                return self.public_profile[i].dist_belief.agg_info.call_dist
+            i=(i+1)%self.num_players 
+            
             
 class PrivateKnowledge:
     def __init__(self,private_strategies,trainning):

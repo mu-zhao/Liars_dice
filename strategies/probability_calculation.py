@@ -145,7 +145,7 @@ class DistributionBelief:
         self.agg_info=AggregateDistribution(player_dice,total_dice-player_dice,call_level)
     
     def bayesian_inference(self,last_bid,previous_bid,next_player_call_belief):
-        conditional_prob=np.zeros_like(self.outcome)
+        condon_prob=np.zeros_like(self.distribution)
         result=np.ones((len(self.agg_info.others_agg_dist)+self.dice,6))
         epsilon=10**(-5)
         for index,rollout in enumerate(self.outcome):
@@ -157,15 +157,15 @@ class DistributionBelief:
             payoff_metric=1/(epsilon+result[previous_bid[0],previous_bid[1]])-1/(1+epsilon) # payoff call liar squared
             for i, bid in enumerate(get_legit_bids(previous_bid)):
                 payoff_metric+=np.sum((payoff[bid:,i]))
-            conditional_prob[index]=payoff[last_bid[0],last_bid[1]]/payoff_metric
-        posterior_dist=self.distribution*conditional_prob
+            condon_prob[index]=payoff[last_bid[0],last_bid[1]]/payoff_metric
+        posterior_dist=self.distribution*condon_prob
         posterior_dist/=np.sum(posterior_dist) #normalize
         self.distribution=self.distribution*self.bluff+posterior_dist*(1-self.bluff)
     
     def update_belief_about_player(self):
         self.agg_info.update(self.outcome,self.distribution)
     def update_player_belief_about_others(self,players_agg_dist):
-       
+       self.agg_info.update_belief(players_agg_dist)
     
     def calibrate_bluff(self,ture_rollout,bid):
         pass
