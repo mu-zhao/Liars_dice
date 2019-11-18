@@ -109,7 +109,7 @@ class AggregateDistribution: #notice they are all common knowledge
                 self.agg_dist[rollout[i]+rollout[0],i]+=dist[i]
         self.agg_cumulative_dist=self.agg_dist[::-1].cumsum(axis=0)[::-1]  #update cumulative dist
         self.expectation=np.sum(self.agg_dist*np.arange(self.dice+1).reshape(-1,1),axis=0)
-        second_moment=np.sum(self.agg_cumulative_dist*(np.arrang(self.dice+1).reshape(-1,1)**2),axis=0)
+        second_moment=np.sum(self.agg_cumulative_dist*(np.arange(self.dice+1).reshape(-1,1)**2),axis=0)
         self.std=second_moment-self.expectation**2
 
     def update_belief(self,belief_agg_dist): #belief_agg_dist is a list of players' agg dist
@@ -152,7 +152,7 @@ class DistributionBelief:
             rollout[1:]+=rollout[0]
             for i in range(6):
                 result[rollout[i]:rollout[i]+len(self.agg_info.others_agg_dist),i]=self.agg_info.others_agg_dist[:,i]
-                result[rollout[i]+len(self.agg_info.others_agg_dist):,i]=1
+                result[rollout[i]+len(self.agg_info.others_agg_dist):,i]=0
             payoff=1/(epsilon+(1-result)*next_player_call_belief)-1/(1+epsilon)
             payoff_metric=1/(epsilon+result[previous_bid[0],previous_bid[1]])-1/(1+epsilon) # payoff call liar squared
             for i, bid in enumerate(get_legit_bids(previous_bid)):
@@ -179,7 +179,7 @@ class DistributionBelief:
     
     
 class CommonResponseBelief:
-    def __init__(self,dist_player,dist_rest,):
+    def __init__(self,dist_player,dist_rest):
         pass
         
         
