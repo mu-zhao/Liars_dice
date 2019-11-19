@@ -3,7 +3,7 @@ import numpy as np
 class HumanPlayer:
     def __init__(self,console=False):
         self.console=console
-    def bid(self,dice_result,common_knowledge):
+    def bid(self,player_id,dice_result,private_dist,common_knowledge):
         print('current players dice%s, Your dice result%s'%(common_knowledge.dice,dice_result))
         while True:
             try:

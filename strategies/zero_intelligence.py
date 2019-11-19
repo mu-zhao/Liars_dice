@@ -1,6 +1,6 @@
 import numpy as np 
 import time
-import strategies.common as cm
+from strategies import common as cm
 from scipy.stats import norm
 def transform(x):
     if x<0:
@@ -69,7 +69,7 @@ class ZeroIntelligence:
                     high=mid 
             self.goodbet=self.goodbet[high:]
         
-    def bid(self,dice_result,ck):
+    def bid(self,player_id,dice_result,private_dist,ck):
         if self.expectation is None:
             self.preprocess(dice_result,ck)
         if ck.last_bid is None:

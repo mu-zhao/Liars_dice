@@ -1,6 +1,6 @@
 import numpy as np 
-from probability_calculation import DistributionBelief as DB
-from probability_calculation import aggregate_distribution as agg 
+from strategies.probability_calculation import DistributionBelief as DB
+from strategies.probability_calculation import aggregate_distribution as agg 
 dic=['liar','spot-on']  # only for easy read
 
 
@@ -46,13 +46,14 @@ def compare_bids(bids):
             w[i]=b[0]
     return w[0]<w[1] or (w[0]==w[1] and bids[0][1]<=bids[1][1])
             
-def to_cum_dist(rollout,agg_cum_dist):
-    rollout[1:]+=rollout[0]
-    res=np.zeros((len(agg_cum_dist)+sum(rollout),6))
+def to_cum_dist(rollout,agg_dist):
+    r=rollout[0]+rollout
+    r[0]=rollout[0]
+    res=np.zeros((len(agg_dist)+sum(rollout),6))
     for i in range(6):
-        res[rollout[i]:rollout[i]+len(agg_cum_dist),i]=agg_cum_dist[:,i]
-        res[rollout[i]+len(agg_cum_dist):,i]=0
-    return res 
+        res[r[i]:r[i]+len(agg_dist),i]=agg_dist[:,i]
+        res[r[i]+len(agg_dist):,i]=0
+    return res[::-1].cumsum(axis=0)[::-1]
 
 
 
@@ -109,12 +110,13 @@ class PlayerPublicProfile:
         """This is a method to update a player's bids
        
         """
+        
         self.bids.append(last_bid)
         self.dist_belief.bayesian_inference(last_bid,previous_bid,next_player_call_belief)
         self.dist_belief.update_belief_about_player()
 
-    def update_player_belief_about_others(self,players_agg_dist):
-        self.dist_belief.update_player_belief_about_others(players_agg_dist)
+    def update_player_belief_about_others(self,others_agg_dist):
+        self.dist_belief.update_player_belief_about_others(others_agg_dist)
 
 
 
@@ -133,14 +135,16 @@ class PlayerPrivateProfile:
         self.strategy=strategy
         
     def roll(self,ppp):
-        self.roll_result=np.random.choice(ppp.dist_belief.outcome,p=ppp.dist_belief.distribution)
+        i=np.random.choice(np.arange(len(ppp.dist_belief.outcome)),p=ppp.dist_belief.distribution)
+        self.roll_result=ppp.dist_belief.outcome[i]
+        
         
     def make_decision(self,common_knowledge,trainning):
         return self.strategy.bid(self.id,self.roll_result,self.private_dist,common_knowledge)
    
     def update(self,ck):
-        agg_cum_dist=agg(ck.get_others_agg_dist(self.id))
-        self.private_dist=to_cum_dist(self.roll_result,agg_cum_dist)
+        agg_dist=agg(ck.get_others_agg_dist(self.id))
+        self.private_dist=to_cum_dist(self.roll_result,agg_dist)
 
     def reset(self):
         self.strategy.reset()
@@ -172,12 +176,13 @@ class CommonKnowledge:
     def update(self,bid,trainning):
         if not trainning:
             print('Turn %s, Players Dice %s' %(self.turn,self.dice),'Player %s bid %s'%(self.whose_turn,bid))
-        for i in range(self.num_players):
+        for i in range(self.whose_turn-self.num_players,self.whose_turn):
             if self.dice[i]>0:
-                if i==self.whose_turn:
-                    self.public_profile[i].update_belief_about_player(bid,self.last_bid,self.get_next_player_call_belief(i))
+                if i==self.whose_turn-self.num_players:
+                    
+                    self.public_profile[i].update_belief_about_player(bid,self.last_bid,self.get_next_player_call_belief(i%self.num_players))
                 else:
-                    self.public_profile[i].update_player_belief_about_others(self.get_others_agg_dist(i))
+                    self.public_profile[i].update_player_belief_about_others(self.get_others_agg_dist(i%self.num_players))
         self.last_player=self.whose_turn
         self.last_bid=bid 
         self.turn+=1
@@ -223,9 +228,9 @@ class CommonKnowledge:
         self.last_bid=None 
         self.dice[self.dice < 0] = 0
         for i in range(self.num_players):
-            if self.dice[i]>0:
                 self.public_profile[i].reset(self.dice[i],self.get_total_dice())    # update players' public profile 
-
+        
+        
     def get_total_dice(self):
         return sum(self.dice)  
 
@@ -234,19 +239,22 @@ class CommonKnowledge:
     def get_others_agg_dist(self,player_id):    # NOT cumulative dist
         L=[]
         for i in range(self.num_players):
-            if self.dice[i]>0 and i!=player_id:
+            if self.dice[i]>0 and (i!=player_id):
                 L.append(self.public_profile[i].dist_belief.agg_info.agg_dist)
         return L 
-    def get_all_call_belief(self,player_id):
+    def get_all_common_belief(self,player_id):
         L=[]
         for i in range(player_id-self.num_players,player_id):
             if self.dice[i]>0:
-                L.append(self.public_profile[i].dist_belief.agg_info.call_dist)
+                L.append(self.public_profile[i].dist_belief)
         return L 
         
     def get_player_in_game_dice(self,player_id):
-        L=[i if i>0 for i in self.dice[player_id:]]+[i if i>0 for i in self.dice[:player_id]]
-        return L 
+        L=[]
+        for i in range(player_id-self.num_players,player_id):
+            if self.dice[i]>0:
+                L.append(self.dice[i])
+        return L
 
     def get_next_player_call_belief(self,player_id):
         i=(player_id+1)%self.num_players
@@ -256,12 +264,12 @@ class CommonKnowledge:
             i=(i+1)%self.num_players 
     def get_others_stats(self,player_id):
         expectation=np.zeros(6)
-        std=np.zeros(6)
+        var=np.zeros(6)
         for i in range(self.num_players):
             if self.dice[i]>0 and i!=player_id:
                 expectation+=self.public_profile[i].dist_belief.agg_info.expectation
-                std+=self.public_profile[i].dist_belief.agg_info.std
-        return expectation,std 
+                var+=self.public_profile[i].dist_belief.agg_info.std**2
+        return expectation,np.sqrt(var)
     
 class PrivateKnowledge:
     def __init__(self,private_strategies,trainning):
@@ -293,10 +301,10 @@ class PrivateKnowledge:
         return s 
 
 class PlatForm:
-    def __init__(self,num_dice,private_strategies,call_level=1/3,bluff=0.1,trainning=False):
+    def __init__(self,num_dice,private_strategies,call_level=1/3,bluff=1,trainning=False):
         self.num_player=len(private_strategies)
         self.adice=np.zeros(self.num_player)+num_dice
-        self.common_knowledge=CommonKnowledge(num_dice,self.num_player,num_dice*self.num_player,call_level,bluff)
+        self.common_knowledge=CommonKnowledge(num_dice,self.num_player,call_level,bluff)
         self.private_knowledge=PrivateKnowledge(private_strategies,trainning)
         self.trainning=trainning
         self.new_bid=None  
