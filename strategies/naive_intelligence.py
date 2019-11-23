@@ -68,7 +68,7 @@ class NaiveIntelligence:
                 payoff_call_liar=reward(player_in_game_dice,squared_power,True)*(1-p_liar)+reward(player_in_game_dice,squared_power)*p_liar
                 payoff_spot_on=reward(player_in_game_dice,squared_power,True,True)*p_spot_on+reward(player_in_game_dice,squared_power,spot_on=True)*(1-p_spot_on)
             if self.advisor:
-                self.suggestion.loc[:2,'dice lost':'relative power']=np.array([[-p_liar,p_spot_on-1],[payoff_call_liar,payoff_spot_on]])
+                self.suggestion.loc[:2,'dice lost':'relative power']=np.array([[-p_liar,p_spot_on-1],[payoff_call_liar,payoff_spot_on]]).copy()
             if payoff_call_liar>payoff_spot_on:
                 max_payoff=payoff_call_liar
                 response=[0]
@@ -85,6 +85,7 @@ class NaiveIntelligence:
                                   self.time_limit,self.judgement,self.bayes_dist,utility_f=self.utility,simple_minded=self.simple_minded)
             
                 res,payoff,dice_lost,error=simulation.simulation_result()
+                print(res,payoff,dice_lost,error)
                 if self.advisor:
                     self.suggestion.iloc[i+2]=np.array([res,payoff,dice_lost,error])
                 #print(res,payoff)
