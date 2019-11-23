@@ -1,3 +1,4 @@
+#%%
 import numpy as np 
 #from strategies import probability_calculation
 from strategies.common import PlatForm as PF 

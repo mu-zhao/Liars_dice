@@ -123,7 +123,7 @@ class Simulation:
                 self.response=bid
                 self.dice_lost=lost
                 self.error=self.sim_error
-        return self.response, self.payoff , self.dice_lost, self.sim_error
+        return self.response, self.payoff , self.dice_lost, self.error
             
     def best_response(self,player_id):
         if self.response_principle==0:
