@@ -1,7 +1,6 @@
 import numpy as np 
-import time
 from scipy.stats import binom
-
+from strategies.bayesian_inference import transition_prob,transition_prob_naive
 def add_distribution(d1,d2):
     """This function  calculate distribution of two independent random varible. It is convolution (polinomial 
     product rule)
@@ -27,6 +26,7 @@ def aggregate_distribution(D):
     Returns:
         numpy array -- aggregate distribution 
     """
+  
     d=D[0]
     for i in D[1:]:
         if len(i)<len(d):   # run faster
@@ -57,19 +57,6 @@ def generate_init_dist(num_dice,f,cumulative=True):
         agg_dist[:,i]+=l
     return agg_dist
 
-def get_legit_bids(bid):
-    if bid is None:
-        return [1]*6
-    L=np.zeros(6,dtype=int)
-    if bid[1]==0:
-        L[0]=bid[0]+1
-        L[1:]=2*bid[0]
-        return L
-    else:
-        L[0]=bid[0]//2+1
-        L[1:bid[1]+1]=bid[0]+1
-        L[bid[1]+1:]=bid[0]
-    return L
 
 #def best_response(last_bid,player_rollout,others_agg_dist,next_player_call_belief):  # this function will be called lots of times, so it has to be fast
 #    if last_bid[0]>=player_rollout[last_bid[1]]+len(others_agg_dist):  # rollout is aggregated 
@@ -91,28 +78,7 @@ def get_legit_bids(bid):
 #            p=(others_agg_dist[num-player_rollout[i],i]-1)*next_player_call_belief[num-player_rollout[i],i]
 #         
 #    return response 
-def best_response(last_bid,rollout,others_agg_dist,next_player_call_belief):
-    r=rollout[0]+rollout
-    r[0]=rollout[0]
-    result=np.ones((len(others_agg_dist)+int(sum(rollout)),6))
-    for i in range(6):
-        result[r[i]:r[i]+len(others_agg_dist),i]=others_agg_dist[:,i]
-        result[r[i]+len(others_agg_dist):,i]=0
-    payoff=(result-1)*next_player_call_belief # simple payoff of rasie
-    payoff_call_liar=-result[last_bid[0],last_bid[1]] # simple payoff call liar 
-    if payoff_call_liar==0:
-        return [0]
-    for i, bid in enumerate(get_legit_bids(last_bid)):
-        payoff[:bid,i]=-1
-    s=np.max(payoff)
-    if s<=payoff_call_liar:
-        return [0]
-    payoff=payoff.flatten()
-    prob=(payoff>=s*1.1)+(payoff>payoff_call_liar)*(s/payoff_call_liar)**2
-    prob/=np.sum(prob)
-    index=np.random.choice(np.arange(len(prob)),p=prob)
-    return [index//6,index%6]
-    
+ 
         
 class AggregateDistribution: #notice they are all common knowledge
     def __init__(self,player_dice,others_dice,call_level):
@@ -126,7 +92,7 @@ class AggregateDistribution: #notice they are all common knowledge
         self.agg_cumulative_dist=generate_init_dist(player_dice,binom.sf)
         self.others_agg_dist=generate_init_dist(others_dice,binom.sf)
         self.call_dist=call_belief(self.agg_cumulative_dist,self.others_agg_dist,self.call_level)
-       
+    
         
     def update(self,outcome,dist):
         self.agg_dist=np.zeros_like(self.agg_dist)
@@ -139,12 +105,12 @@ class AggregateDistribution: #notice they are all common knowledge
         self.expectation=np.sum(self.agg_dist*np.arange(self.dice+1).reshape(-1,1),axis=0)
         second_moment=np.sum(self.agg_dist*(np.arange(self.dice+1).reshape(-1,1)**2),axis=0)
         self.std=np.sqrt(second_moment-self.expectation**2)
-        print(self.expectation)
+        #print(self.expectation)
         
     def update_belief(self,belief_agg_dist): #belief_agg_dist is a list of players' agg dist
         self.others_agg_dist=aggregate_distribution(belief_agg_dist)[::-1].cumsum(axis=0)[::-1]
         self.call_dist=call_belief(self.agg_cumulative_dist,self.others_agg_dist,self.call_level)
-      
+        
         
                 
                 
@@ -170,6 +136,7 @@ class DistributionBelief:
         self.total_dice=total_dice
         self.dice=player_dice
         self.outcome=outcome[1:]
+        self.prior_dist=np.array(distribution)
         self.distribution=np.array(distribution)
         self.agg_info=AggregateDistribution(player_dice,total_dice-player_dice,call_level)
         
@@ -180,25 +147,21 @@ class DistributionBelief:
             r=rollout[0]+rollout
             r[0]=rollout[0]
             for i in range(6):
+                result[:r[i],i]=0
                 result[r[i]:r[i]+len(self.agg_info.others_agg_dist),i]=self.agg_info.others_agg_dist[:,i]
                 result[r[i]+len(self.agg_info.others_agg_dist):,i]=0
-            if previous_bid is None:
-                payoff_call_liar=-1
-            else:
-                payoff_call_liar=-result[previous_bid[0],previous_bid[1]] # payoff call liar squared
-            if payoff_call_liar<0:
-                payoff=(result-1)*next_player_call_belief
-                payoff_last_bid=payoff[last_bid[0],last_bid[1]]
-                if payoff_last_bid>payoff_call_liar:
-                    for i, bid in enumerate(get_legit_bids(previous_bid)):
-                        payoff[:bid,i]=-1
-                    condon_prob[index]=1/np.sum(payoff>(payoff_last_bid-0.001))
+            condon_prob[index]=transition_prob_naive(result,rollout,previous_bid,last_bid,next_player_call_belief)
+        #print('c',condon_prob)
         posterior_dist=self.distribution*condon_prob
-        posterior_dist/=np.sum(posterior_dist) #normalize
-        self.distribution=self.distribution*self.bluff+posterior_dist*(1-self.bluff)
-        
- 
-        
+        s=np.sum(posterior_dist)
+        if s>0:
+            posterior_dist/=s   #normalize
+#            print(self.outcome)
+#            print('post',posterior_dist)
+            self.distribution=self.distribution*self.bluff+posterior_dist*(1-self.bluff)
+#            print('dist',self.distribution)
+            
+            
     def update_belief_about_player(self):
         self.agg_info.update(self.outcome,self.distribution)
     def update_player_belief_about_others(self,players_agg_dist):
@@ -207,7 +170,7 @@ class DistributionBelief:
     def calibrate_bluff(self,ture_rollout,bid):
         pass
             
-            
+    
     
     
     

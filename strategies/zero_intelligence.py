@@ -10,9 +10,9 @@ def transform(x):
     return x
     
 class ZeroIntelligence:
-    def __init__(self,conservativeness,aggressiveness,stochastic=0):
+    def __init__(self,conservativeness,aggressiveness,stochastic=0.5):
         self.conservativeness=transform(conservativeness)
-        self.up_lim_factor=0.84-0.54*self.conservativeness
+        self.up_lim_factor=0.84-0.24*self.conservativeness
         self.aggressiveness=transform(aggressiveness)
         self.stochastic=stochastic
         self.intelligence=0
@@ -75,10 +75,11 @@ class ZeroIntelligence:
         if ck.last_bid is None:
             return self.first_bid
         if self.goodbet is None:
+#            print('zero-p',private_dist[ck.last_bid[0],ck.last_bid[1]])
             return [0]
         self.update_goodbet(ck.last_bid)
         if self.goodbet is not None:
-            z_score=[(bid[0]-self.expectation[int(bid[1])])/self.std[int(bid[1])] for bid in self.goodbet ]
+            z_score=[(bid[0]-self.expectation[int(bid[1])]-0.5)/self.std[int(bid[1])] for bid in self.goodbet ]
             neutral_position=[sum(ck.dice)/3]*6
             neutral_position[0]/=2
             neutral_std=[ np.sqrt(2*sum(ck.dice))/3]*6
@@ -87,13 +88,15 @@ class ZeroIntelligence:
             prob=1-norm.cdf(np.array(z_score))*norm.cdf(np.array(neutral_z_score))
             if np.random.random()<self.stochastic:
                 prob=pow(prob,1+5*self.aggressiveness)
+#                print('p...',prob)
                 return self.goodbet[np.random.choice(len(self.goodbet),p=prob/sum(prob))].astype(int)
             else:
                 return self.goodbet[np.argmax(prob)].astype(int)
+#        print('zero-p',private_dist[ck.last_bid[0],ck.last_bid[1]])
         return [0]
 
-    
-            
+
+      
 
         
 
