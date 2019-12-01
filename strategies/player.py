@@ -1,7 +1,7 @@
 import numpy as np 
 
 class HumanPlayer:
-    def __init__(self,console=False,advisor=False):
+    def __init__(self,console=False,advisor=None):
         self.console=console
         self.advisor=advisor
     def bid(self,player_id,dice_result,private_dist,common_knowledge):
