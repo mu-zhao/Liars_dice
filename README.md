@@ -29,3 +29,5 @@ Files:
 
  AIs that play liar's dice.
    
+   
+For more details, please go to https://github.com/mu-zhao/Liars_dice/wiki
