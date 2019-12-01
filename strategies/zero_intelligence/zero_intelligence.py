@@ -1,6 +1,6 @@
 import numpy as np 
 import time
-from strategies import common as cm
+import common as cm
 from scipy.stats import norm
 def transform(x):
     if x<0:

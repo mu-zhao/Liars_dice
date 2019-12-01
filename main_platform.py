@@ -1,9 +1,9 @@
 import numpy as np
-from strategies.common import PlatForm as PF 
-from strategies.epsilon_intelligence import EpsilonIntelligence as EI
-from strategies.zero_intelligence import ZeroIntelligence as ZI
-from strategies.player import HumanPlayer as HP
-from strategies.naive_intelligence import NaiveIntelligence as NI
+from common import PlatForm as PF 
+from strategies.epsilon_intelligence.epsilon_intelligence import EpsilonIntelligence as EI
+from strategies.zero_intelligence.zero_intelligence import ZeroIntelligence as ZI
+from strategies.human_player.player import HumanPlayer as HP
+from strategies.naive_intelligence.naive_intelligence import NaiveIntelligence as NI
 player=HP()
 L=[NI(simulation_time_limit=0.1,aggresive=0.9,simple_minded=False,response_principle=0)]
 for i in range(3):
