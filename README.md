@@ -7,20 +7,25 @@ This project
 
 Files:
 
-1. main_platfrom.py:
 
-a showcase of the platform
+
+1.main_platfrom.py:
+
+ a showcase of the platform
+
 
 2.common.py:
 
-supporting files of the platform
+ supporting files of the platform
+
 
 
 3.lairs_dice advisor.ipynb:
 
-use one(or several) of the AIs to play as advisors to the player.
+ use one(or several) of the AIs to play as advisors to the player.
 
-4. strategies:
 
-AIs that play liar's dice.
+4.strategies:
+
+ AIs that play liar's dice.
    
