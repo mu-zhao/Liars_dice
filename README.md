@@ -1,33 +1,40 @@
 # Liars_dice
 
 This project
-1. creates a platform to play the game liar's dice; 
+1. creates an extensible platform to play the game liar's dice; 
 2. creates multiple AIs to play liar's dice;
-3. creates AI advisors help player play liar's dice;
+3. creates AI advisors to help player play the game;
 
 Files:
 
 
-
 1.main_platfrom.py:
 
- a showcase of the platform
+ the main platform to play the game
 
 
 2.common.py:
 
- supporting files of the platform
+ supporting file of the platform
 
 
 
 3.lairs_dice advisor.ipynb:
 
- use one(or several) of the AIs to play as advisors to the player.
+ showcase of use one(or several) of the AIs to play as advisor to the player.
+
+4.liars_dice AIs play.html:
+ 
+ showcase of play by various AIs
+
+5.liars_dice AIs vs human.html:
+
+showcase of human play with AIs
 
 
 4.strategies:
 
- AIs that play liar's dice.
+various AIs that play liar's dice.
    
    
-For more details, please go to https://github.com/mu-zhao/Liars_dice/wiki
+For more details on the AIs, please go to https://github.com/mu-zhao/Liars_dice/wiki
