@@ -32,7 +32,7 @@ Files:
 showcase of human play with AIs
 
 
-4.strategies:
+6.strategies:
 
 various AIs that play liar's dice.
    
