@@ -38,3 +38,5 @@ various AIs that play liar's dice.
    
    
 For more details on the AIs, please go to https://github.com/mu-zhao/Liars_dice/wiki
+
+To read math format on Github, you might need _MathJax Plugin for Github_ https://chrome.google.com/webstore/detail/mathjax-plugin-for-github/ioemnmodlmafdkllaclgeombjnmnbima
