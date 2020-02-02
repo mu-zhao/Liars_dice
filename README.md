@@ -8,35 +8,35 @@ This project
 Files:
 
 
-1.main_platfrom.py:
+1.**main_platfrom.py**:
 
  the main platform to play the game
 
 
-2.common.py:
+2.**common.py**:
 
  supporting file of the platform
 
 
 
-3.lairs_dice advisor.ipynb:
+3.**lairs_dice advisor.ipynb**:
 
  showcase of use one(or several) of the AIs to play as advisor to the player.
 
-4.liars_dice AIs play.html:
+4.**liars_dice AIs.ipynb**:
  
  showcase of play by various AIs
 
-5.liars_dice AIs vs human.html:
+5.**liars_dice AIs vs human.ipynb**:
 
 showcase of human play with AIs
 
 
-6.strategies:
+6.**strategies**:
 
 various AIs that play liar's dice.
    
    
-For more details on the AIs, please go to [AIs for Liar's dice](https://github.com/mu-zhao/Liars_dice/wiki/Zero-Intelligence)
+For more details on the AIs, please go to [**AIs for Liar's dice**](https://github.com/mu-zhao/Liars_dice/wiki/Zero-Intelligence)
 
 To read math format on Github, you might need [_MathJax Plugin for Github_]( https://chrome.google.com/webstore/detail/mathjax-plugin-for-github/ioemnmodlmafdkllaclgeombjnmnbima)
