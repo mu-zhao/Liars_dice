@@ -98,7 +98,7 @@ class Simulation:
                     i=(i+1)%self.num_palyers
             num_simulation+=1
             self.sim_error=np.sqrt(self.sim_record[0]*(1-self.sim_record[0]/num_simulation))/num_simulation
-        print(num_simulation)
+ #       print(num_simulation)
 #        print(bid,'....................',self.sim_record,'|',step/num_simulation,num_simulation)
 #    
     
