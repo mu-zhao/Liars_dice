@@ -36,6 +36,7 @@ showcase of human play with AIs
 
 various AIs that play liar's dice.
 
+## For more details on the AIs, please go to [**AIs for Liar's dice**](https://github.com/mu-zhao/Liars_dice/wiki/Zero-Intelligence)
 -----------------------------------
 ## Template for your own bot!!!
    
@@ -53,6 +54,6 @@ various AIs that play liar's dice.
         pass 
    ```
    
-For more details on the AIs, please go to [**AIs for Liar's dice**](https://github.com/mu-zhao/Liars_dice/wiki/Zero-Intelligence)
+
 
 To read math format on Github, you might need [_MathJax Plugin for Github_]( https://chrome.google.com/webstore/detail/mathjax-plugin-for-github/ioemnmodlmafdkllaclgeombjnmnbima)
